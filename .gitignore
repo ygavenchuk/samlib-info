@@ -1,0 +1,6 @@
+cmake-build*
+.idea/
+.DS_Store
+*.db
+*.sqlite
+*.sqlite3
