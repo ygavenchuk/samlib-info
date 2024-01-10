@@ -363,7 +363,7 @@ namespace db {
     template <typename T>
     class DB {
         private:
-            const Connection& _con;
+            const std::shared_ptr<db::Connection> _con;
 
             int _getCallback(void *data, int numFields, char **fieldValues, char **fieldNames) {
                 auto* DBData = static_cast<std::vector<typeof T::data>*>(data);
@@ -397,11 +397,11 @@ namespace db {
             }
 
         public:
-            explicit DB(const Connection& connection) : _con(connection) {}
+            explicit DB(const std::shared_ptr<db::Connection>& connection) : _con(connection) {}
 
             void begin() {
                 char *zErrMsg = nullptr;
-                if (sqlite3_exec(this->_con.session, "BEGIN TRANSACTION;", NULL, NULL, &zErrMsg) != SQLITE_OK) {
+                if (sqlite3_exec(this->_con->session, "BEGIN TRANSACTION;", NULL, NULL, &zErrMsg) != SQLITE_OK) {
                     const std::string errMsg(zErrMsg);
                     sqlite3_free(zErrMsg);
                     throw QueryError(errMsg);
@@ -409,11 +409,11 @@ namespace db {
                 sqlite3_free(zErrMsg);
             }
             void rollback() {
-                sqlite3_exec(this->_con.session, "ROLLBACK;", NULL, NULL, nullptr);
+                sqlite3_exec(this->_con->session, "ROLLBACK;", NULL, NULL, nullptr);
             }
             void commit() {
                 char *zErrMsg = nullptr;
-                if (sqlite3_exec(this->_con.session, "COMMIT;", NULL, NULL, &zErrMsg) != SQLITE_OK) {
+                if (sqlite3_exec(this->_con->session, "COMMIT;", NULL, NULL, &zErrMsg) != SQLITE_OK) {
                     const std::string errMsg(zErrMsg);
                     sqlite3_free(zErrMsg);
                     throw QueryError(errMsg);
@@ -427,7 +427,7 @@ namespace db {
                 std::string sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + T::getTable() + "'";
                 sqlite3_stmt *stmt;
 
-                if (sqlite3_prepare_v2(this->_con.session, sql.c_str(), -1, &stmt, 0) == SQLITE_OK) {
+                if (sqlite3_prepare_v2(this->_con->session, sql.c_str(), -1, &stmt, 0) == SQLITE_OK) {
                     if (sqlite3_step(stmt) == SQLITE_ROW) {
                         exists = true;
                     }
@@ -438,7 +438,7 @@ namespace db {
 
             void createTable(){
                 char* errMsg;
-                if (sqlite3_exec(this->_con.session, T::getCrateTableQuery().c_str(), NULL, 0, &errMsg) != SQLITE_OK) {
+                if (sqlite3_exec(this->_con->session, T::getCrateTableQuery().c_str(), NULL, 0, &errMsg) != SQLITE_OK) {
                     std::cerr << "Cannot create table: " << errMsg << std::endl;
                     sqlite3_free(errMsg);
                 }
@@ -458,7 +458,7 @@ namespace db {
                 char *zErrMsg = nullptr;
                 std::pair<DB*, std::vector<typeof T::data>*> parameters = {this, &dbData};
 
-                int rc = sqlite3_exec(this->_con.session, sql.c_str(), DB::staticCallback, &parameters, &zErrMsg);
+                int rc = sqlite3_exec(this->_con->session, sql.c_str(), DB::staticCallback, &parameters, &zErrMsg);
 
                 if (rc != SQLITE_OK) {
                     std::string errMsg(zErrMsg);
@@ -491,7 +491,7 @@ namespace db {
                 std::string sql = "DELETE FROM " + T::getTable() + " WHERE _id = " + std::to_string(dbData.id) + " LIMIT 1;";
 
                 char *zErrMsg = nullptr;
-                int rc = sqlite3_exec(this->_con.session, sql.c_str(), NULL, NULL, &zErrMsg);
+                int rc = sqlite3_exec(this->_con->session, sql.c_str(), NULL, NULL, &zErrMsg);
 
                 if(rc != SQLITE_OK)
                 {
@@ -518,7 +518,7 @@ namespace db {
                                   + " LIMIT " + std::to_string(dbData.size());
 
                 char *zErrMsg = nullptr;
-                int rc = sqlite3_exec(this->_con.session, sql.c_str(), NULL, NULL, &zErrMsg);
+                int rc = sqlite3_exec(this->_con->session, sql.c_str(), NULL, NULL, &zErrMsg);
 
                 if( rc != SQLITE_OK ) {
                     std::string errMsg(zErrMsg);
@@ -534,7 +534,7 @@ namespace db {
                 std::string sql = "DELETE FROM " + T::getTable() + " WHERE " + static_cast<std::string>(where);
 
                 char *zErrMsg = nullptr;
-                int rc = sqlite3_exec(this->_con.session, sql.c_str(), NULL, NULL, &zErrMsg);
+                int rc = sqlite3_exec(this->_con->session, sql.c_str(), NULL, NULL, &zErrMsg);
 
                 if( rc != SQLITE_OK ) {
                     std::string errMsg(zErrMsg);
@@ -555,7 +555,7 @@ namespace db {
                 sql.append(" (" + columns + ") ").append("VALUES (" + values + ");");
 
                 char *zErrMsg = nullptr;
-                int rc = sqlite3_exec(this->_con.session, sql.c_str(), NULL, NULL, &zErrMsg);
+                int rc = sqlite3_exec(this->_con->session, sql.c_str(), NULL, NULL, &zErrMsg);
 
                 if(rc != SQLITE_OK) {
                     const std::string errMsg(zErrMsg);
@@ -564,7 +564,7 @@ namespace db {
                 }
 
                 // Fetch the ID of the last inserted row
-                int id = sqlite3_last_insert_rowid(this->_con.session);
+                int id = sqlite3_last_insert_rowid(this->_con->session);
                 typeof T::data newData = dbData;
                 newData.id = id;
                 return newData;
@@ -604,7 +604,7 @@ namespace db {
                 sql.append(" WHERE _id = " + std::to_string(dbData.id));
 
                 char *zErrMsg = nullptr;
-                int rc = sqlite3_exec(this->_con.session, sql.c_str(), NULL, NULL, &zErrMsg);
+                int rc = sqlite3_exec(this->_con->session, sql.c_str(), NULL, NULL, &zErrMsg);
 
                 if(rc != SQLITE_OK) {
                     const std::string errMsg(zErrMsg);
@@ -645,7 +645,7 @@ namespace db {
                 }
 
                 char *zErrMsg = nullptr;
-                int rc = sqlite3_exec(this->_con.session, sql.c_str(), NULL, NULL, &zErrMsg);
+                int rc = sqlite3_exec(this->_con->session, sql.c_str(), NULL, NULL, &zErrMsg);
 
                 if(rc != SQLITE_OK) {
                     const std::string errMsg(zErrMsg);
@@ -663,7 +663,7 @@ namespace db {
                 char *zErrMsg = nullptr;
                 unsigned int rowCount;
                 sqlite3_stmt *stmt;
-                auto rc = sqlite3_prepare_v2(this->_con.session, sql.c_str(), -1, &stmt, 0 );
+                auto rc = sqlite3_prepare_v2(this->_con->session, sql.c_str(), -1, &stmt, 0 );
 
                 if (rc == SQLITE_OK) {
                     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -691,7 +691,7 @@ namespace db {
                 char *zErrMsg = nullptr;
                 bool result;
                 sqlite3_stmt *stmt;
-                auto rc = sqlite3_prepare_v2(this->_con.session, sql.c_str(), -1, &stmt, 0 );
+                auto rc = sqlite3_prepare_v2(this->_con->session, sql.c_str(), -1, &stmt, 0 );
 
                 if (rc == SQLITE_OK) {
                     while (sqlite3_step(stmt) == SQLITE_ROW) {

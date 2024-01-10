@@ -20,23 +20,16 @@
 
 
 int main(int argv, char **argc) {
-    /*
-    // don't forget to include the `#include "logger.h"` to play with logger
-    logger::Logger logger;
-    logger.setLogLevel(logger::LogLevel::Info);
-
-    logger.debug << "This is a debug message " << 12 << ". " << std::endl;
-    logger.info << "This is an info message " << 1234 << ". " << std::endl;
-    logger.warning << "This is a warning message " << 12.34 << ". " << std::endl;
-    logger.error << "This is an error message " << 34 << ". " << std::endl;
-    */
-
     //// First of all you need to specify path to the SQLite DB file
     //// You may use DB exported from the original SamLibInfo app or create an empty DB
     std::string dbFile("samlib-test.db");
 
+    //// Now, let's configure a logger
+    auto logger = std::make_shared<logger::Logger>();
+    logger->setLogLevel(logger::LogLevel::Info);
+
     //// Create an `Agent` instance to start working with the app
-    auto agent = agent::Agent(dbFile);
+    auto agent = agent::Agent(dbFile, logger);
     //// in case of empty DB don't forget to init the DB (create all required tables)
     //// Note, that the `initDB()` method checks if a table exists before attempt to creat it
     //// so, it's safe to keep this line uncommented

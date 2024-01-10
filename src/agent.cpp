@@ -24,29 +24,26 @@ void Agent::initDB() {
     this->_tBook->createTable();
 }
 
+Agent::Agent(const std::string& dbPath, const std::shared_ptr<logger::Logger>& logger) :
+  _logger(logger),
+  _con(std::make_shared<db::Connection>(dbPath)),
+  _tAuthor(std::make_shared<db::DB<db::Author>>(_con)),
+  _tBook(std::make_shared<db::DB<db::Book>>(_con)),
+  _tGroup(std::make_shared<db::DB<db::GroupBook>>(_con)),
+  _miner(std::make_unique<miner::Miner>(_con, _logger, _tAuthor, _tGroup, _tBook))
+  {}
+
 Agent::Agent(const std::string& dbPath) :
-    _con(db::Connection(dbPath)), _miner(_con, _logger)
-{
-    // this->_logger.setLogLevel(logger::LogLevel::Warning);
-    this->_tAuthor = new db::DB<db::Author>(this->_con);
-    this->_tBook = new db::DB<db::Book>(this->_con);
-    this->_tGroup = new db::DB<db::GroupBook>(this->_con);
-}
-
-
-Agent::~Agent() {
-    delete this->_tAuthor;
-    this->_tAuthor = nullptr;
-
-    delete this->_tBook;
-    this->_tBook = nullptr;
-
-    delete this->_tGroup;
-    this->_tGroup = nullptr;
-}
+    _logger(std::make_shared<logger::Logger>()),
+    _con(std::make_shared<db::Connection>(dbPath)),
+    _tAuthor(std::make_shared<db::DB<db::Author>>(_con)),
+    _tBook(std::make_shared<db::DB<db::Book>>(_con)),
+    _tGroup(std::make_shared<db::DB<db::GroupBook>>(_con)),
+    _miner(std::make_unique<miner::Miner>(_con, _logger, _tAuthor, _tGroup, _tBook))
+{}
 
 void Agent::checkUpdates() {
-    this->_miner.syncAll();
+    this->_miner->syncAll();
 }
 
 db::Authors Agent::getAuthors(bool updatesOnly) {
@@ -120,7 +117,7 @@ unsigned int Agent::countGroups(const db::AuthorData &author, bool updatesOnly) 
 db::AuthorData Agent::addAuthor(const std::string& url) {
     db::AuthorData author;
     try {
-        author = this->_miner.getAuthor(url);
+        author = this->_miner->getAuthor(url);
     }
     catch (miner::AuthorNotFound& err) {
         return author;
@@ -130,12 +127,12 @@ db::AuthorData Agent::addAuthor(const std::string& url) {
     }
     //todo: check if author with this URL already exists in the db
     if (this->_tAuthor->exists(db::Where("URL='" + author.url + "'"))) {
-        this->_logger.warning << "Author \"" << author.name << "\" already is in the DB. " << std::endl;
+        this->_logger->warning << "Author \"" << author.name << "\" already is in the DB. " << std::endl;
     }
     else {
         author = this->_tAuthor->add(author);
     }
-    this->_miner.sync(author);
+    this->_miner->sync(author);
     return author;
 }
 
@@ -162,7 +159,7 @@ void Agent::markAsRead<db::Book>(unsigned int id) {
     try {
         book = this->_tBook->get(id);
     } catch (db::DoesNotExist& err) {
-        this->_logger.error << err.what() << std::endl;
+        this->_logger->error << err.what() << std::endl;
         this->_tBook->rollback();
         return;
     }
@@ -200,7 +197,7 @@ void Agent::markAsRead<db::GroupBook>(unsigned int id) {
     try {
         group = this->_tGroup->get(id);
     } catch (db::DoesNotExist& err) {
-        this->_logger.error << err.what() << std::endl;
+        this->_logger->error << err.what() << std::endl;
         this->_tBook->rollback();
         return;
     }
@@ -229,7 +226,7 @@ void Agent::markAsUnRead<db::Book>(unsigned int id) {
     try {
         book = this->_tBook->get(id);
     } catch (db::DoesNotExist& err) {
-        this->_logger.error << err.what() << std::endl;
+        this->_logger->error << err.what() << std::endl;
         this->_tBook->rollback();
         return;
     }
@@ -260,13 +257,13 @@ void Agent::removeAuthor(unsigned int id) {
         this->_tGroup->remove(whereAuthorId);
         this->_tAuthor->remove(db::WhereMe(id));
     } catch (const db::DBError &err) {
-        this->_logger.error << "Cannot remove data for the author #" << id
+        this->_logger->error << "Cannot remove data for the author #" << id
                             << "due to DB error: \"" << err.what() << "\"" << std::endl;
         this->_tAuthor->rollback();
         return;
     }
     this->_tAuthor->commit();
-    this->_logger.debug << "All data about author #" << id << "\" was removed from the DB." << std::endl;
+    this->_logger->debug << "All data about author #" << id << "\" was removed from the DB." << std::endl;
 }
 
 void Agent::removeAuthor(const db::AuthorData &author) {

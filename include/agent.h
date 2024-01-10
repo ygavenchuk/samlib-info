@@ -26,17 +26,17 @@ namespace agent {
 
     class Agent {
         private:
-            db::Connection _con;
-            logger::Logger _logger;
-            miner::Miner _miner;
-            db::DB<db::Book>* _tBook;
-            db::DB<db::GroupBook>* _tGroup;
-            db::DB<db::Author>* _tAuthor;
+            const std::shared_ptr<db::Connection> _con;
+            const std::shared_ptr<logger::Logger> _logger;
+            const std::shared_ptr<db::DB<db::Book>> _tBook;
+            const std::shared_ptr<db::DB<db::GroupBook>> _tGroup;
+            const std::shared_ptr<db::DB<db::Author>> _tAuthor;
+            const std::unique_ptr<miner::Miner> _miner;
 
         public:
             Agent(const std::string& dbPath);
-            // Agent(const std::string& dbPath, logger::Logger& logger); // fixme: implement this constructor
-            ~Agent();
+            Agent(const std::string& dbPath, const std::shared_ptr<logger::Logger>& logger);
+            ~Agent() = default;
             void checkUpdates();
             // fixme: refactor this! I'd prefer to have interface like the next one:
             //        me->author->add()
