@@ -73,18 +73,25 @@ namespace miner {
 
     class Miner {
         private:
-            db::Connection& _con;
-            db::DB<db::Book>* _tBook;
-            db::DB<db::GroupBook>* _tGroup;
-            db::DB<db::Author>* _tAuthor;
-            logger::Logger& _logger;
+            const std::shared_ptr<logger::Logger> _logger;
+            const std::shared_ptr<db::Connection> _con;
+            const std::shared_ptr<db::DB<db::Book>> _tBook;
+            const std::shared_ptr<db::DB<db::GroupBook>> _tGroup;
+            const std::shared_ptr<db::DB<db::Author>> _tAuthor;
 
             void _logDiff(const Difference& diff, const db::AuthorData& author);
             std::string _getAuthorUrl(const std::string& url) const;
 
         public:
-            Miner(db::Connection& connection, logger::Logger& logger);
-            ~Miner();
+            Miner(const std::shared_ptr<db::Connection>& connection, const std::shared_ptr<logger::Logger>& logger);
+            Miner(
+                    const std::shared_ptr<db::Connection>& connection,
+                    const std::shared_ptr<logger::Logger>& logger,
+                    const std::shared_ptr<db::DB<db::Author>>& authorDB,
+                    const std::shared_ptr<db::DB<db::GroupBook>>& groupDB,
+                    const std::shared_ptr<db::DB<db::Book>>& bookDB
+                  );
+            ~Miner() = default;
 
             db::AuthorData getAuthor(const std::string& url) const;
             Difference getUpdates(const db::AuthorData& author);
