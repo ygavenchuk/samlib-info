@@ -42,4 +42,6 @@ add_executable(
         include/logger.h
         src/agent.cpp
         include/agent.h
+        src/fs.cpp
+        include/fs.h
 )

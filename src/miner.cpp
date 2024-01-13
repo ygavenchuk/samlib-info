@@ -23,6 +23,7 @@
 #include <regex>
 #include "miner.h"
 #include "tools.h"
+#include "http.h"
 
 using namespace miner;
 
@@ -285,7 +286,7 @@ Difference miner::Miner::getUpdates(const db::AuthorData& author) {
     Difference diff;
 
     this->_logger->debug << "Fetching data from the author's page \"" << author.url << "\"..."  << std::endl;
-    const auto pageText = http::get( http::toUrl(S_PROTOCOL, S_DOMAIN, author.url));
+    const auto pageText = http::get( http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, author.url));
     if (pageText.empty()) {
         this->_logger->warning << "The page of the author \"" << author.name << "\" (" << author.url
                               << ") cannot be found."  << std::endl;
@@ -320,7 +321,7 @@ Difference miner::Miner::getUpdates(const db::AuthorData& author) {
                                 << " Fetching data from it (" << author.url << webBookGroup.url << ".shtml) ..."
                                 << std::endl;
             const auto groupText = http::get(
-                http::toUrl(S_PROTOCOL, S_DOMAIN, author.url, webBookGroup.url , ".shtml")
+                http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, author.url, webBookGroup.url , ".shtml")
             );
 
             if (groupText.empty()) {
@@ -479,17 +480,17 @@ std::string Miner::_getAuthorUrl(const std::string& url) const {
     }
 
     if (matches[1].length() > 0) { // check if group 1 is not empty
-        return http::toUrl(S_PROTOCOL, S_DOMAIN, matches[1]);
+        return http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, matches[1]);
     }
 
     std::string result = matches[3];
-    return  http::toUrl(S_PROTOCOL, S_DOMAIN, result.substr(0, 1),  result );
+    return  http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, result.substr(0, 1),  result );
 }
 
 inline std::string stripDomain(const std::string& url) {
-    auto domainPos = url.find(S_DOMAIN);
+    auto domainPos = url.find(http::S_DOMAIN);
     if (domainPos > 0) {
-        return url.substr(domainPos + S_DOMAIN.length(), url.length());
+        return url.substr(domainPos + http::S_DOMAIN.length(), url.length());
     }
 
     return url;

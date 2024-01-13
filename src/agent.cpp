@@ -24,22 +24,24 @@ void Agent::initDB() {
     this->_tBook->createTable();
 }
 
-Agent::Agent(const std::string& dbPath, const std::shared_ptr<logger::Logger>& logger) :
+Agent::Agent(const std::string& dbPath, const std::string& bookStorageLocation, const std::shared_ptr<logger::Logger>& logger) :
   _logger(logger),
   _con(std::make_shared<db::Connection>(dbPath)),
   _tAuthor(std::make_shared<db::DB<db::Author>>(_con)),
   _tBook(std::make_shared<db::DB<db::Book>>(_con)),
   _tGroup(std::make_shared<db::DB<db::GroupBook>>(_con)),
-  _miner(std::make_unique<miner::Miner>(_con, _logger, _tAuthor, _tGroup, _tBook))
+  _miner(std::make_unique<miner::Miner>(_con, _logger, _tAuthor, _tGroup, _tBook)),
+  _storage(std::make_unique<fs::FSStorage>(bookStorageLocation))
   {}
 
-Agent::Agent(const std::string& dbPath) :
+Agent::Agent(const std::string& dbPath, const std::string& bookStorageLocation) :
     _logger(std::make_shared<logger::Logger>()),
     _con(std::make_shared<db::Connection>(dbPath)),
     _tAuthor(std::make_shared<db::DB<db::Author>>(_con)),
     _tBook(std::make_shared<db::DB<db::Book>>(_con)),
     _tGroup(std::make_shared<db::DB<db::GroupBook>>(_con)),
-    _miner(std::make_unique<miner::Miner>(_con, _logger, _tAuthor, _tGroup, _tBook))
+    _miner(std::make_unique<miner::Miner>(_con, _logger, _tAuthor, _tGroup, _tBook)),
+    _storage(std::make_unique<fs::FSStorage>(bookStorageLocation))
 {}
 
 void Agent::checkUpdates() {
@@ -270,4 +272,24 @@ void Agent::removeAuthor(unsigned int id) {
 
 void Agent::removeAuthor(const db::AuthorData &author) {
     this->removeAuthor(author.id);
+}
+
+bool Agent::fetchBook(const db::BookData& book) const {
+    auto bookUrl = book.link;
+    const auto fileName = this->_storage->ensurePath(bookUrl);
+    auto url = http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, bookUrl + ".fb2.zip");
+    auto isDownloaded = http::fetchToFile(url, fileName);
+
+    if (isDownloaded) {
+        this->_logger->debug << "The book \"" << book.title << "\" is downloaded into file://" << fileName << std::endl;
+    }
+    else {
+        this->_logger->warning << "Cannot download book \"" << book.title << "\"." << std::endl;
+    }
+
+    return isDownloaded;
+}
+
+bool Agent::fetchBook(unsigned int bookId) const {
+    return this->fetchBook(this->_tBook->get(bookId));
 }

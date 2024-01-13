@@ -20,16 +20,19 @@
 
 
 int main(int argv, char **argc) {
+    //// Define path to your data locations. E.g. downloads in your home directory
+    // const std::string path = "~/Downloads/";
+
     //// First of all you need to specify path to the SQLite DB file
     //// You may use DB exported from the original SamLibInfo app or create an empty DB
-    std::string dbFile("samlib-test.db");
+    std::string dbFile(path + "samlib-test.db");    // fixme: build path to the DB by using FSStorage
 
     //// Now, let's configure a logger
     auto logger = std::make_shared<logger::Logger>();
     logger->setLogLevel(logger::LogLevel::Info);
 
     //// Create an `Agent` instance to start working with the app
-    auto agent = agent::Agent(dbFile, logger);
+    auto agent = agent::Agent(dbFile, path, logger);
     //// in case of empty DB don't forget to init the DB (create all required tables)
     //// Note, that the `initDB()` method checks if a table exists before attempt to creat it
     //// so, it's safe to keep this line uncommented
@@ -39,6 +42,9 @@ int main(int argv, char **argc) {
     //// - uncomment next line(s)
     // agent.addAuthor("http://samlib.ru/s/sedrik/");
     // agent.addAuthor("/s/saggaro_g/");
+
+    //// try to fetch some book
+    // agent.fetchBook(19);
 
     //// If log messages are "slightly" noisy - you may change the default log level by uncommenting
     //// and/or changing the next line `src/agent.cpp:18` (in the `agent::Agent::Agent`)

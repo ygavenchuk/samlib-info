@@ -34,8 +34,6 @@ namespace miner {
           R"lit((\/?([a-z])\/\2[a-z0-9_-]+\/?).*$)lit" // can be in full form (i.e. /l/lorem_ipsum)
           R"lit(|^([a-z0-9-_]+\/?)$)lit" // or just contain meaningful part of the url
     ;
-    const std::string S_PROTOCOL = "http";
-    const std::string S_DOMAIN = "samlib.ru";
 
     class MinerError : public SamLibError {
         public:

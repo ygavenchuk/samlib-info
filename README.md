@@ -7,4 +7,6 @@ to other platforms. Now the project is at a very early stage. Nevertheless, now 
   * check updates for a specific author(s) or for all known authors;
   * mark author/group books/book as read;
   * mark a book as un-read;
-  * show list of known authors/group books/books
+  * show list of known authors/group books/books;
+  * create directory structure for books;
+  * downloads books in `FB2` format into file;
