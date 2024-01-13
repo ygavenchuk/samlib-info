@@ -18,11 +18,24 @@
 #ifndef SAMLIBINFO_HTTP_H
 #define SAMLIBINFO_HTTP_H
 
+#include "logger.h"
+#include "parser.h"
+#include "db.h"
 #include <string>
 #include <vector>
+#include "errors.h"
 
 namespace http {
     using Page = std::string;
+
+    class HTTPError : public SamLibError {
+    public:
+        explicit HTTPError(const std::string& arg) : SamLibError("HTTPError: " + arg) {}
+        explicit HTTPError(const char* arg) : SamLibError(std::string("HTTPError: ") + arg) {}
+    };
+
+    const std::string S_PROTOCOL = "http";
+    const std::string S_DOMAIN = "samlib.ru";
 
     struct Settings {
         std::string protocol;
@@ -37,10 +50,26 @@ namespace http {
      *
      * @note in case response status code is not `200 OK` the function returns an empty string
      *
+     * @throws HTTPError
+     *
      * @param url The URL to send the GET request to.
      * @return The content retrieved from the response as a string.
      */
     Page get(const std::string &url);
+
+    /**
+     * @brief Fetches a file from the specified URL and saves it to the specified file path.
+     *
+     * This function downloads a file from the provided URL and saves it to the file path specified.
+     *
+     * @param url The URL of the file to be fetched.
+     * @param filePath The file path where the fetched file will be saved.
+     *
+     * @throws HTTPError in case of any errors
+     *
+     * @return True if the file was successfully fetched and saved, false otherwise.
+     */
+    bool fetchToFile(const std::string& url, const std::string& filePath);
 
 
     /**

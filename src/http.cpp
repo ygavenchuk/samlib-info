@@ -15,7 +15,6 @@
  */
 
 #include <string>
-#include <iostream>
 #include <iconv.h>
 #include <curl/curl.h>
 #include "http.h"
@@ -32,7 +31,7 @@ std::string toUtf8(const std::string& str)
 
     iconv_t convertingDescriptor = iconv_open(toCode, fromCode);
     if (convertingDescriptor == ERROR_ICONV_OPEN) {
-        throw "iconv open failed";  // fixme: add a custom error class
+        throw HTTPError("iconv open failed");
     }
 
     size_t inSize = str.size();
@@ -44,7 +43,7 @@ std::string toUtf8(const std::string& str)
     char* origOutBuf = outBuf; // Save original outBuf pointer to delete it later
 
     if (iconv(convertingDescriptor, &inBuf, &inSize, &outBuf, &outSize) == ERROR_ICONV_CONVERT) {
-        throw "iconv failed";  // fixme: add a custom error class
+        throw HTTPError("iconv failed");
     }
     *outBuf = 0; // Null-terminate the output string
 
@@ -60,11 +59,16 @@ std::string toUtf8(const std::string& str)
 
 
 // The libcurl callback function that is called after each chunk of data is received
-static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
+static size_t _writeCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
     // probably it might be convenient to change encoding here
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
+}
+
+size_t _writeDataFoFile(void* ptr, size_t size, size_t nmemb, FILE* stream) {
+    size_t written = fwrite(ptr, size, nmemb, stream);
+    return written;
 }
 
 // The fetchHtml function that accepts a URL as input and uses libcurl to make a GET request to that URL, returning the HTML contents as a string
@@ -73,16 +77,17 @@ Page http::get(const std::string &url) {
     CURLcode res;
     Page readBuffer;
 
-    if(curl) {
+    if (curl) {
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, _writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
         res = curl_easy_perform(curl);
 
         // Check for errors
         if (res != CURLE_OK) {
-            // fixme: throw an exception here
-            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            auto errorMessage = curl_easy_strerror(res);
+            curl_easy_cleanup(curl);
+            throw HTTPError(errorMessage);
         }
 
         long httpCode = 0;
@@ -92,8 +97,37 @@ Page http::get(const std::string &url) {
         }
 
         curl_easy_cleanup(curl);
-
     }
 
     return toUtf8(readBuffer);
+}
+
+
+bool http::fetchToFile(const std::string& url, const std::string& filePath) {
+    CURL* curl = curl_easy_init();
+    CURLcode res;
+    FILE* fp;
+
+    if (curl) {
+        fp = fopen(filePath.c_str(),"wb");
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, _writeDataFoFile);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        fclose(fp);
+
+        // Check for errors
+        if (res != CURLE_OK) {
+            return false;
+        }
+
+        long httpCode = 0;
+        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &httpCode);
+        if (httpCode != 200 ) { // todo: add explicit status "not found"
+            return false;
+        }
+    }
+
+    return true;
 }

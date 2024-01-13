@@ -21,6 +21,7 @@
 #include "db.h"
 #include "miner.h"
 #include "logger.h"
+#include "fs.h"
 
 namespace agent {
 
@@ -32,10 +33,11 @@ namespace agent {
             const std::shared_ptr<db::DB<db::GroupBook>> _tGroup;
             const std::shared_ptr<db::DB<db::Author>> _tAuthor;
             const std::unique_ptr<miner::Miner> _miner;
+            const std::unique_ptr<fs::FSStorage> _storage;
 
         public:
-            Agent(const std::string& dbPath);
-            Agent(const std::string& dbPath, const std::shared_ptr<logger::Logger>& logger);
+            Agent(const std::string& dbPath, const std::string& bookStorageLocation);
+            Agent(const std::string& dbPath, const std::string& bookStorageLocation, const std::shared_ptr<logger::Logger>& logger);
             ~Agent() = default;
             void checkUpdates();
             // fixme: refactor this! I'd prefer to have interface like the next one:
@@ -68,6 +70,8 @@ namespace agent {
             template <typename T>
             void markAsUnRead(unsigned int id);
             void markAsUnRead(const db::BookData& book);
+            bool fetchBook(const db::BookData& book) const;
+            bool fetchBook(unsigned int bookId) const;
     };
 }
 
