@@ -485,7 +485,16 @@ namespace db {
                     );
                 }
                 return result[0];
-        }
+            }
+            typeof T::data get(const Where& where) {
+                auto result = this->retrieve(where, 1);
+                if (result.empty()) {
+                    throw DoesNotExist(
+                        "Cannot find record for given criteria in the table \"" + T::getTable() + "\""
+                    );
+                }
+                return result[0];
+            }
 
             void remove(const typeof T::data& dbData) {
                 std::string sql = "DELETE FROM " + T::getTable() + " WHERE _id = " + std::to_string(dbData.id) + " LIMIT 1;";

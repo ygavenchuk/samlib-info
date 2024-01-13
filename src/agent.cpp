@@ -125,9 +125,11 @@ db::AuthorData Agent::addAuthor(const std::string& url) {
     catch (miner::InvalidURL& err) {
         return author;
     }
-    //todo: check if author with this URL already exists in the db
-    if (this->_tAuthor->exists(db::Where("URL='" + author.url + "'"))) {
+
+    auto whereUrl = db::Where("URL='" + author.url + "'");
+    if (this->_tAuthor->exists(whereUrl)) {
         this->_logger->warning << "Author \"" << author.name << "\" already is in the DB. " << std::endl;
+        author = this->_tAuthor->get(whereUrl);
     }
     else {
         author = this->_tAuthor->add(author);
