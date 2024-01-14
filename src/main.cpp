@@ -20,12 +20,13 @@
 
 
 int main(int argv, char **argc) {
-    //// Define path to your data locations. E.g. downloads in your home directory
-    // const std::string path = "~/Downloads/";
+    //// Define path to your data locations. E.g. let's use $XDG_DATA_HOME (i.e. `~/.local/share`)
+    //// @see https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+     const std::string path = "~/.local/share/SamLib/";
 
     //// First of all you need to specify path to the SQLite DB file
     //// You may use DB exported from the original SamLibInfo app or create an empty DB
-    std::string dbFile(path + "samlib-test.db");    // fixme: build path to the DB by using FSStorage
+    std::string dbFile(path + "samlib.db");
 
     //// Now, let's configure a logger
     auto logger = std::make_shared<logger::Logger>();

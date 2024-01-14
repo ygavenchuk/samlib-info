@@ -18,6 +18,29 @@
 
 using namespace db;
 
+std::string Connection::_getCleanPath(const std::string &dbPath) const {
+    if (dbPath.empty() || dbPath.starts_with(":memory:") || dbPath.starts_with("file::memory:")) {
+        return dbPath;
+    }
+
+    try {
+        return fs::path::ensure(dbPath);
+    }
+    catch (fs::FSError &err) {
+        throw DBError(static_cast<std::string>("A new DB cannot be created : ") + err.what());
+    }
+}
+
+Connection::Connection(const std::string& dbPath) {
+    int rc = sqlite3_open(this->_getCleanPath(dbPath).c_str(), &this->session);
+    if(rc!= SQLITE_OK) {
+        throw DBError(static_cast<std::string>("Can't open database: ") + sqlite3_errmsg(this->session));
+    }
+}
+
+Connection::~Connection() { sqlite3_close(this->session); }
+
+
 Where::Where(const Where& other) : _value(other._value) {}
 Where::operator std::string() const { return this->_value; }
 Where::operator bool() const { return !this->_value.empty(); }

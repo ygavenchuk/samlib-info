@@ -31,7 +31,7 @@ Agent::Agent(const std::string& dbPath, const std::string& bookStorageLocation, 
   _tBook(std::make_shared<db::DB<db::Book>>(_con)),
   _tGroup(std::make_shared<db::DB<db::GroupBook>>(_con)),
   _miner(std::make_unique<miner::Miner>(_con, _logger, _tAuthor, _tGroup, _tBook)),
-  _storage(std::make_unique<fs::FSStorage>(bookStorageLocation))
+  _storage(std::make_unique<fs::BookStorage>(bookStorageLocation))
   {}
 
 Agent::Agent(const std::string& dbPath, const std::string& bookStorageLocation) :
@@ -41,7 +41,7 @@ Agent::Agent(const std::string& dbPath, const std::string& bookStorageLocation) 
     _tBook(std::make_shared<db::DB<db::Book>>(_con)),
     _tGroup(std::make_shared<db::DB<db::GroupBook>>(_con)),
     _miner(std::make_unique<miner::Miner>(_con, _logger, _tAuthor, _tGroup, _tBook)),
-    _storage(std::make_unique<fs::FSStorage>(bookStorageLocation))
+    _storage(std::make_unique<fs::BookStorage>(bookStorageLocation))
 {}
 
 void Agent::checkUpdates() {
