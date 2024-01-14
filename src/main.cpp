@@ -44,8 +44,12 @@ int main(int argv, char **argc) {
     // agent.addAuthor("http://samlib.ru/s/sedrik/");
     // agent.addAuthor("/s/saggaro_g/");
 
-    //// try to fetch some book
+    //// try to fetch some book as FB2.
+    /// NOTE, in case the site hasn't requested book in the FB2 format it will be automatically saved as HTML
     // agent.fetchBook(19);
+
+    //// or you may explicitly store it as HTML if you like
+    // agent.fetchBook(19, fs::BookType::HTML);
 
     //// If log messages are "slightly" noisy - you may change the default log level by uncommenting
     //// and/or changing the next line `src/agent.cpp:18` (in the `agent::Agent::Agent`)

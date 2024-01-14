@@ -17,6 +17,8 @@
 #include <string>
 #include <iconv.h>
 #include <curl/curl.h>
+#include <filesystem>
+#include <cstdio>
 #include "http.h"
 
 using namespace http;
@@ -119,12 +121,18 @@ bool http::fetchToFile(const std::string& url, const std::string& filePath) {
 
         // Check for errors
         if (res != CURLE_OK) {
+            if (std::filesystem::exists(filePath)) {
+                std::remove(filePath.c_str());
+            }
             return false;
         }
 
         long httpCode = 0;
         curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &httpCode);
         if (httpCode != 200 ) { // todo: add explicit status "not found"
+            if (std::filesystem::exists(filePath)) {
+                std::remove(filePath.c_str());
+            }
             return false;
         }
     }

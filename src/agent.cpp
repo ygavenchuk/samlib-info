@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include "agent.h"
 
 using namespace agent;
@@ -274,7 +275,33 @@ void Agent::removeAuthor(const db::AuthorData &author) {
     this->removeAuthor(author.id);
 }
 
-bool Agent::fetchBook(const db::BookData& book) const {
+bool Agent::_fetchBookAsHTML(const db::BookData &book) const {
+    auto bookUrl = book.link;
+    auto url = http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, bookUrl + ".shtml");
+    auto bookText = http::get(url);
+
+    if (bookText.empty()) {
+        this->_logger->warning << "Cannot get text of the book \"" << book.title << "\" (" << url << ")" << std::endl;
+        return false;
+    }
+
+    auto fileName = this->_storage->ensurePath(bookUrl, fs::BookType::HTML);
+
+    std::ofstream outFile(fileName);
+
+    if (!outFile.is_open()) {
+        return false;
+    }
+
+    outFile << bookText;
+    outFile.close();
+
+    this->_logger->debug << "The book \"" << book.title << "\" is downloaded into file://" << fileName << std::endl;
+
+    return true;
+}
+
+bool Agent::_fetchBookAsFB2(const db::BookData &book) const {
     auto bookUrl = book.link;
     const auto fileName = this->_storage->ensurePath(bookUrl);
     auto url = http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, bookUrl + ".fb2.zip");
@@ -284,12 +311,24 @@ bool Agent::fetchBook(const db::BookData& book) const {
         this->_logger->debug << "The book \"" << book.title << "\" is downloaded into file://" << fileName << std::endl;
     }
     else {
-        this->_logger->warning << "Cannot download book \"" << book.title << "\"." << std::endl;
+        this->_logger->warning << "Cannot download book \"" << book.title << "\" in FB2 format." << std::endl;
     }
 
     return isDownloaded;
 }
 
-bool Agent::fetchBook(unsigned int bookId) const {
-    return this->fetchBook(this->_tBook->get(bookId));
+bool Agent::fetchBook(const db::BookData& book, fs::BookType bookType) const {
+    if (bookType == fs::BookType::FB2) {
+        if (this->_fetchBookAsFB2(book)) {
+            return true;
+        }
+
+        this->_logger->info << "Trying to load book \"" << book.title << "\" as HTML..." << std::endl;
+    }
+
+    return this->_fetchBookAsHTML(book);
+}
+
+bool Agent::fetchBook(unsigned int bookId, fs::BookType bookType) const {
+    return this->fetchBook(this->_tBook->get(bookId), bookType);
 }

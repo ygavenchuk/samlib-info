@@ -95,7 +95,7 @@ std::string BookStorage::_getFullPath(std::string& bookUrl, BookType bookType) c
     return this->_location / (bookUrl + (bookType == BookType::FB2 ? ".fb2.zip" : ".html") );
 }
 
-std::string BookStorage::ensurePath(std::string& bookUrl) const {
-    return fs::path::ensure(this->_getFullPath(bookUrl));
+std::string BookStorage::ensurePath(std::string& bookUrl, BookType bookType) const {
+    return fs::path::ensure(this->_getFullPath(bookUrl, bookType));
 }
 
