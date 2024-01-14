@@ -106,7 +106,22 @@ namespace fs {
     class BookStorage {
         private:
             std::filesystem::path _location;
-            std::string _getFullPath(std::string& bookUrl, BookType bookType=BookType::FB2) const;
+
+        /**
+         * @brief Get the full path of a given book URL.
+         *
+         * This function returns the full path of a given book URL based on the specified book type.
+         *
+         * @param bookUrl The URL of the book.
+         * @param bookType The type of the book (optional, default value is BookType::FB2).
+         *
+         * @throw FSError (e.g. if `bookUrl` is empty)
+         *
+         * @return The full path of the book URL.
+         *
+         * @see BookType
+         */
+        std::string _getFullPath(std::string& bookUrl, BookType bookType=BookType::FB2) const;
 
         public:
             explicit BookStorage(const std::string& location);
@@ -134,13 +149,14 @@ namespace fs {
          * to ensure the path is valid.
          *
          * @param bookUrl The book's URL that is converted to filesystem path and the path is created if necessary.
+         * @param bookType The type of the book (optional, default value is BookType::FB2).
          *
          * @throw FSError
          *
          * @return resolved (absolute) path.
          * @see fs::path::resolve()
          */
-        std::string ensurePath(std::string& bookUrl) const;
+        std::string ensurePath(std::string& bookUrl, BookType bookType = BookType::FB2) const;
     };
 }
 
