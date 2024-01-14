@@ -33,7 +33,7 @@ namespace agent {
             const std::shared_ptr<db::DB<db::GroupBook>> _tGroup;
             const std::shared_ptr<db::DB<db::Author>> _tAuthor;
             const std::unique_ptr<miner::Miner> _miner;
-            const std::unique_ptr<fs::FSStorage> _storage;
+            const std::unique_ptr<fs::BookStorage> _storage;
 
         public:
             Agent(const std::string& dbPath, const std::string& bookStorageLocation);

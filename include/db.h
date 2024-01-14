@@ -27,6 +27,7 @@
 #include <functional>
 #include "sqlite3.h"
 #include "errors.h"
+#include "fs.h"
 
 namespace db {
     class DBError : public SamLibError {
@@ -346,18 +347,36 @@ namespace db {
     };
 
 
+    /**
+     * @class Connection
+     * @brief Represents a connection to a SQLite database.
+     *
+     * The Connection class ensures the path to the specified SQLite DB exists and  establish a connection to it
+     * @see fs::path::resolve()
+     *
+     * @throw DBError
+     */
     class Connection {
+        private:
+            /**
+             * @brief Get the clean path of a database file.
+             *
+             * This function takes a database file path as input and returns the clean version of the path.
+             * The clean path removes any unnecessary characters, whitespace or leading/trailing slashes, ensuring
+             * a standardized format for the path.
+             *
+             * NOTE. In case of in-memory db (":memory:" or "file:memory:") method returns input parameter as is
+             *
+             * @param dbPath The path of the database file.
+             * @throw DBError
+             *
+             * @return The clean version of the database file path.
+             */
+            std::string _getCleanPath(const std::string& dbPath) const;
         public:
-            sqlite3 *session;
-            explicit Connection(const std::string &dbPath) {
-                int rc = sqlite3_open(dbPath.c_str(), &this->session);
-                if(rc!= SQLITE_OK) {
-                    std::cerr << "Can't open database: " << sqlite3_errmsg(this->session) << std::endl;
-                    throw DBError("Can't open database");
-                }
-            }
-
-            ~Connection() { sqlite3_close(this->session); }
+            sqlite3* session;
+            explicit Connection(const std::string &dbPath);
+            ~Connection();
     };
 
     template <typename T>
