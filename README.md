@@ -9,4 +9,4 @@ to other platforms. Now the project is at a very early stage. Nevertheless, now 
   * mark a book as un-read;
   * show list of known authors/group books/books;
   * create directory structure for books;
-  * downloads books in `FB2` format into file;
+  * downloads books in `FB2` or `HTML` format into file;
