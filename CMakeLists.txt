@@ -15,17 +15,24 @@
 
 
 cmake_minimum_required(VERSION 3.27)
-project(SamlibInfo)
+set(APP_NAME SamlibInfo)
+project(${APP_NAME})
 
 set(CMAKE_CXX_STANDARD 20)
 
-#add_compile_definitions(DEBUG)
+find_package(SQLite3 REQUIRED)
+find_package(CURL REQUIRED)
+find_package(Iconv REQUIRED)
 
-add_link_options("-lsqlite3" "-lcurl" "-liconv")  # try to replace by pure CMake construction
-include_directories("include")
+include_directories(
+    ${SQLITE3_INCLUDE_DIRS}
+    ${CURL_INCLUDE_DIRS}
+    ${Iconv_INCLUDE_DIR}
+    "include"
+)
 
 add_executable(
-        SamlibInfo
+        ${APP_NAME}
         src/main.cpp
         src/db.cpp
         include/db.h
@@ -44,4 +51,11 @@ add_executable(
         include/agent.h
         src/fs.cpp
         include/fs.h
+)
+
+target_link_libraries(
+        ${APP_NAME}
+        ${SQLite3_LIBRARIES}
+        ${CURL_LIBRARIES}
+        ${Iconv_LIBRARY}
 )
