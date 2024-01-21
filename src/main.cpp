@@ -16,10 +16,10 @@
 
 #include <iostream>
 #include <string>
-#include "agent.h"
+#include "core/agent.h"
 
 
-int main(int argv, char **argc) {
+int main(int argc, char **argv) {
     //// Define path to your data locations. E.g. let's use $XDG_DATA_HOME (i.e. `~/.local/share`)
     //// @see https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
      const std::string path = "~/.local/share/SamLib/";

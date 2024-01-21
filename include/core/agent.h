@@ -42,9 +42,9 @@ namespace agent {
              *
              * @param book The BookData object representing the book to be fetched.
              *
-             * @return true if the book was fetched and stored successfully, false otherwise.
+             * @return path to downloaded file if the book was fetched successfully, an empty string otherwise
              */
-            bool _fetchBookAsHTML(const db::BookData& book) const;
+            std::string _fetchBookAsHTML(const db::BookData& book) const;
 
             /**
              * @brief Fetches a book from the site by using it's URL from the database in FB2 format.
@@ -54,9 +54,9 @@ namespace agent {
              *
              * @param book The BookData object representing the book to be fetched.
              *
-             * @return true if the book was fetched and stored successfully, false otherwise.
+             * @return path to downloaded file if the book was fetched successfully, an empty string otherwise
              */
-            bool _fetchBookAsFB2(const db::BookData& book) const;
+            std::string _fetchBookAsFB2(const db::BookData& book) const;
 
         public:
             Agent(const std::string& dbPath, const std::string& bookStorageLocation);
@@ -75,11 +75,15 @@ namespace agent {
             void removeAuthor(unsigned int id);
             void removeAuthor(const db::AuthorData& author);
             db::Authors getAuthors(bool updatesOnly = false);
+            db::AuthorData getAuthor(unsigned int authorId);
             db::GroupBooks getGroups(const db::AuthorData& author, bool updatesOnly = false);
             db::GroupBooks getGroups(unsigned int authorId, bool updatesOnly = false);
+            db::GroupBookData getGroup(unsigned int groupId);
             template <typename T>
             db::Books getBooks(unsigned int id, bool updatesOnly = false);
             db::Books getBooks(const db::AuthorData& author, bool updatesOnly = false);
+            db::BookData getBook(unsigned int bookId);
+            std::string getPathToBook(const db::BookData& book);
             template <typename T>
             unsigned int countBooks(unsigned int id, bool updatesOnly = false);
             unsigned int countBooks(const db::AuthorData& author, bool updatesOnly = false);
@@ -105,9 +109,9 @@ namespace agent {
              * @param bookType The BookType enum representing the format in which the book will be fetched.
              *                 Default is FB2.
              *
-             * @return true if the book was fetched successfully, false otherwise.
+             * @return path to downloaded file if the book was fetched successfully, an empty string otherwise
              */
-            bool fetchBook(const db::BookData& book, fs::BookType bookType = fs::BookType::FB2) const;
+            std::string fetchBook(const db::BookData& book, fs::BookType bookType = fs::BookType::FB2) const;
 
             /**
              * @brief Fetches a book from the http://samlib.ru/.
@@ -120,9 +124,9 @@ namespace agent {
              * @param bookType The BookType enum representing the format in which the book will be fetched.
              *                 Default is FB2.
              *
-             * @return true if the book was fetched successfully, false otherwise.
+             * @return path to downloaded file if the book was fetched successfully, an empty string otherwise
              */
-            bool fetchBook(unsigned int bookId, fs::BookType bookType = fs::BookType::FB2) const;
+            std::string fetchBook(unsigned int bookId, fs::BookType bookType = fs::BookType::FB2) const;
     };
 }
 

@@ -21,9 +21,9 @@
 #include <unordered_map>
 #include <ranges>
 #include <regex>
-#include "miner.h"
-#include "tools.h"
-#include "http.h"
+#include "core/miner.h"
+#include "core/tools.h"
+#include "core/http.h"
 
 using namespace miner;
 

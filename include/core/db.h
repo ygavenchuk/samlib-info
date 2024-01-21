@@ -59,24 +59,6 @@ namespace db {
         return statement;
     }
 
-        /*
-    class F {
-        private:
-            std::pair<std::string, std::string> _name;
-            std::string _value;
-        public:
-            explicit F(std::string name, std::string column) : _name({std::move(name), std::move(column)}) {}
-            F& operator =(std::string& value) {
-                this->_value = value;
-                return *this;
-            }
-            F& operator =(const char* value) {
-                this->_value = std::string(value);
-                return *this;
-            }
-            explicit operator std::string() const { return this->_name.second + "='" + this->_value + "'"; }
-    };
-    */
     struct DBData {
         int id;
         DBData(): id(0) {};

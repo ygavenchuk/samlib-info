@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <algorithm>
 #include <cstdlib>
-#include "fs.h"
+#include "core/fs.h"
 
 using namespace fs;
 
@@ -99,3 +99,20 @@ std::string BookStorage::ensurePath(std::string& bookUrl, BookType bookType) con
     return fs::path::ensure(this->_getFullPath(bookUrl, bookType));
 }
 
+bool BookStorage::exists(std::string &bookUrl, fs::BookType bookType) const {
+    return fs::path::exists(this->_getFullPath(bookUrl, bookType));
+}
+
+std::string BookStorage::getFullPathIfExists(const std::string& bookUrl) const {
+    auto bookUrlCopy = bookUrl;
+
+    if (this->exists(bookUrlCopy, fs::BookType::FB2)) {
+        return this->ensurePath(bookUrlCopy, fs::BookType::FB2);
+    }
+
+    if (this->exists(bookUrlCopy, fs::BookType::HTML)) {
+        return this->ensurePath(bookUrlCopy, fs::BookType::HTML);
+    }
+
+    return std::string{};
+}
