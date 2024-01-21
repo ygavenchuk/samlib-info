@@ -15,8 +15,8 @@
  */
 
 #include <regex>
-#include "parser.h"
-#include "tools.h"
+#include "core/parser.h"
+#include "core/tools.h"
 
 using namespace parser;
 

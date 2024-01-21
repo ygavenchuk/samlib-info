@@ -141,22 +141,38 @@ namespace fs {
             }
             ~BookStorage() = default;
 
-        /**
-         * @brief Ensures the existence of the file path specified by bookUrl.
-         *
-         * This function checks if the file path specified by bookUrl exists. If the file
-         * path does not exist, the function attempts to create the necessary directories
-         * to ensure the path is valid.
-         *
-         * @param bookUrl The book's URL that is converted to filesystem path and the path is created if necessary.
-         * @param bookType The type of the book (optional, default value is BookType::FB2).
-         *
-         * @throw FSError
-         *
-         * @return resolved (absolute) path.
-         * @see fs::path::resolve()
-         */
-        std::string ensurePath(std::string& bookUrl, BookType bookType = BookType::FB2) const;
+            /**
+             * @brief Ensures the existence of the file path specified by bookUrl.
+             *
+             * This function checks if the file path specified by bookUrl exists. If the file
+             * path does not exist, the function attempts to create the necessary directories
+             * to ensure the path is valid.
+             *
+             * @param bookUrl The book's URL that is converted to filesystem path and the path is created if necessary.
+             * @param bookType The type of the book (optional, default value is BookType::FB2).
+             *
+             * @throw FSError
+             *
+             * @return resolved (absolute) path.
+             * @see fs::path::resolve()
+             */
+            std::string ensurePath(std::string& bookUrl, BookType bookType = BookType::FB2) const;
+
+            /**
+             * @brief Checks if the file with book specified by bookUrl exists.
+             *
+             * This function checks if the file with book specified by bookUrl exists.
+             *
+             * @param bookUrl The URL of the book.
+             * @param bookType The type of the book (optional, default value is BookType::FB2).
+             *
+             * @return True if the file exists, false otherwise.
+             *
+             * @see BookType
+             */
+            bool exists(std::string& bookUrl, BookType bookType = BookType::FB2) const;
+
+            std::string getFullPathIfExists(const std::string& bookUrl) const;
     };
 }
 

@@ -23,34 +23,39 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(SQLite3 REQUIRED)
 find_package(CURL REQUIRED)
 find_package(Iconv REQUIRED)
+find_package(Boost 1.62.0 REQUIRED COMPONENTS program_options)
+find_package(Boost 1.62.0 REQUIRED COMPONENTS locale)
+
+message(STATUS "Boost include dirs at ${Boost_INCLUDE_DIRS}")
 
 include_directories(
     ${SQLITE3_INCLUDE_DIRS}
     ${CURL_INCLUDE_DIRS}
     ${Iconv_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
     "include"
 )
 
 add_executable(
         ${APP_NAME}
-        src/main.cpp
-        src/db.cpp
-        include/db.h
-        src/http.cpp
-        include/http.h
-        src/parser.cpp
-        include/parser.h
-        src/miner.cpp
-        include/miner.h
-        include/tools.h
-        src/tools.cpp
-        include/errors.h
-        src/logger.cpp
-        include/logger.h
-        src/agent.cpp
-        include/agent.h
-        src/fs.cpp
-        include/fs.h
+        src/core/db.cpp
+        include/core/db.h
+        src/core/http.cpp
+        include/core/http.h
+        src/core/parser.cpp
+        include/core/parser.h
+        src/core/miner.cpp
+        include/core/miner.h
+        include/core/tools.h
+        src/core/tools.cpp
+        include/core/errors.h
+        src/core/logger.cpp
+        include/core/logger.h
+        src/core/agent.cpp
+        include/core/agent.h
+        src/core/fs.cpp
+        include/core/fs.h
+        src/cli.cpp
 )
 
 target_link_libraries(
@@ -58,4 +63,6 @@ target_link_libraries(
         ${SQLite3_LIBRARIES}
         ${CURL_LIBRARIES}
         ${Iconv_LIBRARY}
+        ${Boost_PROGRAM_OPTIONS_LIBRARY}
+        ${Boost_LOCALE_LIBRARY} # required for CLI
 )

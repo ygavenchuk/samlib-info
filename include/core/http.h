@@ -30,8 +30,9 @@ namespace http {
 
     class HTTPError : public SamLibError {
     public:
-        explicit HTTPError(const std::string& arg) : SamLibError("HTTPError: " + arg) {}
-        explicit HTTPError(const char* arg) : SamLibError(std::string("HTTPError: ") + arg) {}
+        explicit HTTPError(const std::string &arg) : SamLibError("HTTPError: " + arg) {}
+
+        explicit HTTPError(const char *arg) : SamLibError(std::string("HTTPError: ") + arg) {}
     };
 
     const std::string S_PROTOCOL = "http";
@@ -69,7 +70,7 @@ namespace http {
      *
      * @return True if the file was successfully fetched and saved, false otherwise.
      */
-    bool fetchToFile(const std::string& url, const std::string& filePath);
+    bool fetchToFile(const std::string &url, const std::string &filePath);
 
 
     /**
@@ -95,15 +96,18 @@ namespace http {
      *   std::string url2 = toUrl("ftp", "example.com"); // Returns "ftp://example.com"
      */
     template<typename... Paths>
-    std::string toUrl(const std::string& protocol, const std::string& domain, Paths... paths) {
+    std::string toUrl(const std::string &protocol, const std::string &domain, Paths... paths) {
         std::string url = protocol + "://" + domain;
         std::vector<std::string> vec{paths...};
-        for(const auto& p : vec) {
-            if(!p.empty())
-                url += p[0] == '/' || p[0] == '.' ?  p : "/" + p;
+        for (const auto &p: vec) {
+            if (!p.empty())
+                url += p[0] == '/' || p[0] == '.' ? p : "/" + p;
         }
         return url;
     }
+
+    template<typename... Paths>
+    inline std::string toUrl(Paths... paths) {return toUrl(S_PROTOCOL, S_DOMAIN, paths...);}
 }
 
 #endif //SAMLIBINFO_HTTP_H

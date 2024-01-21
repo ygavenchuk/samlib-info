@@ -15,7 +15,7 @@
  */
 
 #include <fstream>
-#include "agent.h"
+#include "core/agent.h"
 
 using namespace agent;
 
@@ -55,6 +55,10 @@ db::Authors Agent::getAuthors(bool updatesOnly) {
     );
 }
 
+db::AuthorData Agent::getAuthor(unsigned int authorId) {
+    return this->_tAuthor->get(authorId);
+}
+
 template<>
 db::Books Agent::getBooks<db::Author>(unsigned int id, bool updatesOnly) {
     return this->_tBook->retrieve(
@@ -75,6 +79,10 @@ db::Books Agent::getBooks(const db::AuthorData &author, bool updatesOnly) {
     );
 }
 
+db::BookData Agent::getBook(unsigned int bookId) {
+    return this->_tBook->get(bookId);
+}
+
 db::GroupBooks Agent::getGroups(unsigned int authorId, bool updatesOnly) {
     return this->_tGroup->retrieve(
         updatesOnly
@@ -87,6 +95,10 @@ db::GroupBooks Agent::getGroups(const db::AuthorData &author, bool updatesOnly) 
     return this->_tGroup->retrieve(
         updatesOnly ? db::WhereAuthorIs(author) & db::WhereIsNew<db::GroupBook>() : db::WhereAuthorIs(author)
     );
+}
+
+db::GroupBookData Agent::getGroup(unsigned int groupId) {
+    return this->_tGroup->get(groupId);
 }
 
 template<>
@@ -146,8 +158,8 @@ db::AuthorData Agent::addAuthor(const std::string& url) {
 template<>
 void Agent::markAsRead<db::Author>(unsigned int id) {
     this->_tAuthor->begin();
-    this->_tBook->update(db::WhereMe(id), "ISNEW=0", "DELTA_SIZE=0");
-    this->_tGroup->update(db::WhereMe(id), "NEW_NUMBER=0");
+    this->_tBook->update(db::WhereIdIs<db::Author>(id), "ISNEW=0", "DELTA_SIZE=0");
+    this->_tGroup->update(db::WhereIdIs<db::Author>(id), "NEW_NUMBER=0");
     this->_tAuthor->update(db::WhereMe(id), "ISNEW=0");
     this->_tAuthor->commit();
 }
@@ -257,13 +269,19 @@ void Agent::markAsUnRead(const db::BookData& book) {
 void Agent::removeAuthor(unsigned int id) {
     const auto whereAuthorId = db::WhereIdIs<db::Author>(id);
     this->_tAuthor->begin();
+    if (!this->_tAuthor->exists(db::WhereMe(id))) {
+        this->_logger->warning << "The author #" << id << " does not exists in the DB." << std::endl;
+        this->_tAuthor->rollback();
+        return;
+    }
+
     try {
         this->_tBook->remove(whereAuthorId);
         this->_tGroup->remove(whereAuthorId);
         this->_tAuthor->remove(db::WhereMe(id));
     } catch (const db::DBError &err) {
         this->_logger->error << "Cannot remove data for the author #" << id
-                            << "due to DB error: \"" << err.what() << "\"" << std::endl;
+                             << "due to DB error: \"" << err.what() << "\"" << std::endl;
         this->_tAuthor->rollback();
         return;
     }
@@ -275,14 +293,14 @@ void Agent::removeAuthor(const db::AuthorData &author) {
     this->removeAuthor(author.id);
 }
 
-bool Agent::_fetchBookAsHTML(const db::BookData &book) const {
+std::string Agent::_fetchBookAsHTML(const db::BookData &book) const {
     auto bookUrl = book.link;
     auto url = http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, bookUrl + ".shtml");
     auto bookText = http::get(url);
 
     if (bookText.empty()) {
         this->_logger->warning << "Cannot get text of the book \"" << book.title << "\" (" << url << ")" << std::endl;
-        return false;
+        return std::string{};
     }
 
     auto fileName = this->_storage->ensurePath(bookUrl, fs::BookType::HTML);
@@ -290,7 +308,7 @@ bool Agent::_fetchBookAsHTML(const db::BookData &book) const {
     std::ofstream outFile(fileName);
 
     if (!outFile.is_open()) {
-        return false;
+        return std::string{};
     }
 
     outFile << bookText;
@@ -298,29 +316,28 @@ bool Agent::_fetchBookAsHTML(const db::BookData &book) const {
 
     this->_logger->debug << "The book \"" << book.title << "\" is downloaded into file://" << fileName << std::endl;
 
-    return true;
+    return fileName;
 }
 
-bool Agent::_fetchBookAsFB2(const db::BookData &book) const {
+std::string Agent::_fetchBookAsFB2(const db::BookData &book) const {
     auto bookUrl = book.link;
     const auto fileName = this->_storage->ensurePath(bookUrl);
     auto url = http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, bookUrl + ".fb2.zip");
-    auto isDownloaded = http::fetchToFile(url, fileName);
 
-    if (isDownloaded) {
-        this->_logger->debug << "The book \"" << book.title << "\" is downloaded into file://" << fileName << std::endl;
-    }
-    else {
+    if (!http::fetchToFile(url, fileName)) {
         this->_logger->warning << "Cannot download book \"" << book.title << "\" in FB2 format." << std::endl;
+        return std::string{};
     }
 
-    return isDownloaded;
+    this->_logger->debug << "The book \"" << book.title << "\" is downloaded into file://" << fileName << std::endl;
+    return fileName;
 }
 
-bool Agent::fetchBook(const db::BookData& book, fs::BookType bookType) const {
+std::string Agent::fetchBook(const db::BookData& book, fs::BookType bookType) const {
     if (bookType == fs::BookType::FB2) {
-        if (this->_fetchBookAsFB2(book)) {
-            return true;
+        auto fileName = this->_fetchBookAsFB2(book);
+        if (!fileName.empty()) {
+            return fileName;
         }
 
         this->_logger->info << "Trying to load book \"" << book.title << "\" as HTML..." << std::endl;
@@ -329,6 +346,16 @@ bool Agent::fetchBook(const db::BookData& book, fs::BookType bookType) const {
     return this->_fetchBookAsHTML(book);
 }
 
-bool Agent::fetchBook(unsigned int bookId, fs::BookType bookType) const {
+std::string Agent::fetchBook(unsigned int bookId, fs::BookType bookType) const {
     return this->fetchBook(this->_tBook->get(bookId), bookType);
+}
+
+std::string Agent::getPathToBook(const db::BookData& book) {
+    auto path = this->_storage->getFullPathIfExists(book.link);
+
+    if (!path.empty()) {
+        return path;
+    }
+
+    return this->fetchBook(book);
 }
