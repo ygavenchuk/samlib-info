@@ -22,8 +22,8 @@
 #include <ctime>
 #include <boost/program_options.hpp>
 #include <boost/locale.hpp>
-#include "core/agent.h"
-#include "core/db.h"
+#include "agent.h"
+#include "db.h"
 
 namespace po = boost::program_options;
 

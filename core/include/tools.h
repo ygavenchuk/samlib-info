@@ -83,4 +83,6 @@ inline void trim(std::string &s)
 
 unsigned long getLevenshteinDistance(const std::string& text1, const std::string& text2);
 
+void replaceAll(std::string& input, const std::string& search, const std::string& replacement);
+
 #endif //SAMLIBINFO_TOOLS_H

@@ -15,7 +15,7 @@
  */
 
 #include <string>
-#include "core/tools.h"
+#include "tools.h"
 
 // C++ code for the above approach:
 
@@ -53,4 +53,12 @@ unsigned long levenshteinRecursive(const std::string& text1, const std::string& 
 unsigned long getLevenshteinDistance(const std::string& text1, const std::string& text2)
 {
     return levenshteinRecursive(text1, text2, text1.length(), text2.length());
+}
+
+void replaceAll(std::string& input, const std::string& search, const std::string& replacement) {
+    size_t start_pos = 0;
+    while ((start_pos = input.find(search, start_pos)) != std::string::npos) {
+        input.replace(start_pos, search.length(), replacement);
+        start_pos += replacement.length();
+    }
 }

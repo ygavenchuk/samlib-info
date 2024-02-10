@@ -15,18 +15,61 @@
  */
 
 #include <regex>
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include "core/parser.h"
-#include "core/tools.h"
+#include "parser.h"
+#include "tools.h"
 
 using namespace parser;
 
-// todo: extract genre i.e. SciFi, adventure, detective etc (@see db::AuthorData.form)
+
+/**
+ * @class TextCleaner
+ *
+ * @brief Class to clean text by removing HTML tags, newlines, and multiple spaces.
+ *
+ * The TextCleaner class provides methods to clean text strings by removing HTML tags, replacing HTML newlines with
+ * newlines removing multiple spaces, trimming the leading and trailing spaces, and replacing certain special characters
+ */
+class TextCleaner {
+    private:
+        std::regex _reHtmlTags;
+        std::regex _reHtmlNewLine;
+        std::regex _reMultipleSpaces;
+
+    public:
+        explicit TextCleaner() {
+            _reHtmlTags.assign("<\\/?(\\S+?)[^>]*?>", std::regex_constants::multiline | std::regex_constants::icase);
+            _reHtmlNewLine.assign("<dd>|<br/?>", std::regex_constants::multiline | std::regex_constants::icase);
+            _reMultipleSpaces.assign("\\s{2,}", std::regex_constants::multiline);
+        }
+
+        /**
+         * @brief Cleans the given text by removing HTML tags, newlines, and multiple spaces.
+         *
+         * This function takes a string `text` as input and performs the following operations to clean the text:
+         * 1. Replaces HTML newlines with actual newlines.
+         * 2. Removes HTML tags from the text.
+         * 3. Replaces multiple spaces with a single space.
+         * 4. Trims leading and trailing spaces.
+         * 5. Replaces the special character "&#8212;" with a hyphen "-".
+         *
+         * @param text The text to be cleaned.
+         * @return The cleaned version of the input text.
+         */
+        std::string clean(const std::string& text) {
+            std::string cleanText = std::regex_replace(text, _reHtmlNewLine, "\n");
+            cleanText = std::regex_replace(cleanText, _reHtmlTags, "");
+            cleanText = std::regex_replace(cleanText, _reMultipleSpaces, " ");
+            trim(cleanText, [](unsigned char ch){return ch != ' ';});
+            replaceAll(cleanText, "&#8212;", "-");
+
+            return cleanText;
+        }
+};
+
+
 BooksList parser::getBooks(const std::string& pageText, const std::string& bookPattern) {
-    std::regex reHtmlTags("</?\\S+?[^>]*?>", std::regex_constants::multiline | std::regex_constants::icase);
-    std::regex reHtmlNewLine("<dd>|<br/?>", std::regex_constants::multiline | std::regex_constants::icase);
-    std::regex reMultipleSpaces("\\s{2,}", std::regex_constants::multiline);
+    auto textCleaner = std::make_unique<TextCleaner>();
+
     std::regex reBooks(bookPattern, std::regex_constants::multiline | std::regex_constants::icase);
 
     BooksList bookList;
@@ -40,14 +83,8 @@ BooksList parser::getBooks(const std::string& pageText, const std::string& bookP
         book.size = std::stoi(match[3].str());
         book.url = match[1].str();
         book.title = trim_copy(match[2].str(), noisyChar);
-        book.genre = match[4].str();
-        book.description = match[5].str();
-
-        boost::replace_all(book.description, "&#8212;", "-");
-        book.description = std::regex_replace(book.description, reHtmlNewLine, "\n");
-        book.description = std::regex_replace(book.description, reHtmlTags, "");
-        book.description = std::regex_replace(book.description, reMultipleSpaces, " ");
-        boost::trim(book.description);
+        book.genre = trim_copy(match[4].str(), noisyChar);
+        book.description = textCleaner->clean(match[5].str());
 
         bookList.push_back(std::move(book));
     }
@@ -74,7 +111,7 @@ BookGroupsList parser::getBookGroupList(const std::string &pageText, const std::
         // and because it's irrelevant to the author, we don't want to grab that information
         bookGroup.url = url.compare(0, 5, "/type") == 0 ? "" : url ;
 
-        bookGroupsList.push_back(bookGroup);
+        bookGroupsList.push_back(std::move(bookGroup));
     }
 
     return bookGroupsList;
