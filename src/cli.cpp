@@ -396,7 +396,7 @@ int main(int argc, char **argv) {
     {
         po::store(po::parse_command_line(argc, argv, desc), vm); // can throw
 
-        if (argc == 1 || vm.count("help") || (argc == 2 && vm.count("location")))
+        if (argc == 1 || vm.count("help") || (argc == 2 && vm.count("location") && !vm["location"].defaulted()))
         {
             std::cout << "Please say what should I do:" << std::endl << std::endl << desc << std::endl;
             return 0;
