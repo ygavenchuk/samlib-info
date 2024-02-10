@@ -484,7 +484,9 @@ std::string Miner::_getAuthorUrl(const std::string& url) const {
     }
 
     std::string result = matches[3];
-    return  http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, result.substr(0, 1),  result );
+    auto authorUrl = http::toUrl(http::S_PROTOCOL, http::S_DOMAIN, result.substr(0, 1),  result );
+
+    return authorUrl.ends_with("/") ? authorUrl : authorUrl + "/";
 }
 
 inline std::string stripDomain(const std::string& url) {
