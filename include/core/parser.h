@@ -36,7 +36,7 @@ namespace parser {
             R"lit(([^<>]+)?)lit"                             // genre
             R"lit(\s*(?:<A\s+HREF="\/comment.*?<DD>)?)lit"   // comment
             R"lit((?:<font\s+color="#555555">)lit"
-            R"lit(([^<>]+))lit"                              // description
+            R"lit((.+))lit"                              // description
             R"lit(<\/font>)?)lit"
             R"lit(.*<\/DL>$)lit"
     ;

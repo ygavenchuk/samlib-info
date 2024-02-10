@@ -15,6 +15,8 @@
  */
 
 #include <regex>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include "core/parser.h"
 #include "core/tools.h"
 
@@ -22,7 +24,11 @@ using namespace parser;
 
 // todo: extract genre i.e. SciFi, adventure, detective etc (@see db::AuthorData.form)
 BooksList parser::getBooks(const std::string& pageText, const std::string& bookPattern) {
+    std::regex reHtmlTags("</?\\S+?[^>]*?>", std::regex_constants::multiline | std::regex_constants::icase);
+    std::regex reHtmlNewLine("<dd>|<br/?>", std::regex_constants::multiline | std::regex_constants::icase);
+    std::regex reMultipleSpaces("\\s{2,}", std::regex_constants::multiline);
     std::regex reBooks(bookPattern, std::regex_constants::multiline | std::regex_constants::icase);
+
     BooksList bookList;
     std::sregex_iterator begin = std::sregex_iterator(pageText.begin(), pageText.end(), reBooks);
     std::sregex_iterator end;
@@ -37,7 +43,13 @@ BooksList parser::getBooks(const std::string& pageText, const std::string& bookP
         book.genre = match[4].str();
         book.description = match[5].str();
 
-        bookList.push_back(book);
+        boost::replace_all(book.description, "&#8212;", "-");
+        book.description = std::regex_replace(book.description, reHtmlNewLine, "\n");
+        book.description = std::regex_replace(book.description, reHtmlTags, "");
+        book.description = std::regex_replace(book.description, reMultipleSpaces, " ");
+        boost::trim(book.description);
+
+        bookList.push_back(std::move(book));
     }
 
     return bookList;
