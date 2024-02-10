@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <algorithm>
 #include <cstdlib>
-#include "core/fs.h"
+#include "fs.h"
 
 using namespace fs;
 

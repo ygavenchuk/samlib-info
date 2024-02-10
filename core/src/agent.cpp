@@ -15,7 +15,7 @@
  */
 
 #include <fstream>
-#include "core/agent.h"
+#include "agent.h"
 
 using namespace agent;
 

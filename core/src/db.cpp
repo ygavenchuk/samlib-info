@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "core/db.h"
+#include "db.h"
 
 using namespace db;
 

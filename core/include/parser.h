@@ -34,9 +34,10 @@ namespace parser {
             R"lit(k<\/b>\s+&nbsp;\s+<small>)lit"
             R"lit((?:.*?<\/b>\s+&nbsp;)?\s*)lit"             // score
             R"lit(([^<>]+)?)lit"                             // genre
-            R"lit(\s*(?:<A\s+HREF="\/comment.*?<DD>)?)lit"   // comment
+            R"lit(\s*(?:(?:<A\s+HREF="\/comment.*?<DD>))lit" // comment
+            R"lit(|(?:<\/small><br><DD>))?)lit"              // or just closing tag of the genre block
             R"lit((?:<font\s+color="#555555">)lit"
-            R"lit((.+))lit"                              // description
+            R"lit((.+))lit"                                  // description
             R"lit(<\/font>)?)lit"
             R"lit(.*<\/DL>$)lit"
     ;

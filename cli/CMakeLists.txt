@@ -16,9 +16,28 @@
 
 cmake_minimum_required(VERSION 3.27)
 set(APP_NAME SamlibInfo)
-project(${APP_NAME})
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_subdirectory(core)
-add_subdirectory(cli)
+find_package(Boost 1.62.0 REQUIRED COMPONENTS program_options)
+find_package(Boost 1.62.0 REQUIRED COMPONENTS locale)
+
+message(STATUS "Boost include dirs at ${Boost_INCLUDE_DIRS}")
+
+
+include_directories(
+        ${Boost_INCLUDE_DIRS}
+        "../core/include"
+)
+
+add_executable(
+        ${APP_NAME}
+        src/cli.cpp
+)
+
+target_link_libraries(
+        ${APP_NAME}
+        PRIVATE ${Boost_PROGRAM_OPTIONS_LIBRARY}
+        PRIVATE ${Boost_LOCALE_LIBRARY} # required for CLI
+        PRIVATE "samlib-info"
+)
