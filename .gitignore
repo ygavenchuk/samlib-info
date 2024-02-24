@@ -1,6 +1,9 @@
 cmake-build*
 .idea/
+venv/
 .DS_Store
 *.db
 *.sqlite
 *.sqlite3
+CMakeUserPresets.json
+conan_provider.cmake

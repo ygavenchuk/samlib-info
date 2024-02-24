@@ -19,6 +19,7 @@ set(APP_NAME SamlibInfo)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(Iconv REQUIRED)  # `conan` requires this library for the `boost_locale`
 find_package(Boost 1.62.0 REQUIRED COMPONENTS program_options)
 find_package(Boost 1.62.0 REQUIRED COMPONENTS locale)
 
@@ -27,6 +28,7 @@ message(STATUS "Boost include dirs at ${Boost_INCLUDE_DIRS}")
 
 include_directories(
         ${Boost_INCLUDE_DIRS}
+        ${Iconv_INCLUDE_DIR}
         "../core/include"
 )
 
@@ -37,6 +39,7 @@ add_executable(
 
 target_link_libraries(
         ${APP_NAME}
+        PRIVATE ${Iconv_LIBRARY}
         PRIVATE ${Boost_PROGRAM_OPTIONS_LIBRARY}
         PRIVATE ${Boost_LOCALE_LIBRARY} # required for CLI
         PRIVATE "samlib-info"

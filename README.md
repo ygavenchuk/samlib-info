@@ -64,3 +64,69 @@ you'll get the next table
     Created at: | 2024-01-14 17:31:10
     Checked at: | 2024-01-14 17:31:10
 ```
+
+
+## Conan
+First of all, you need the [conan v2](https://docs.conan.io/2/installation.html) installed. You may not want to install
+the `conan` "globally", as a system package/tool. So, just use [virtualenv](https://docs.python.org/3/library/venv.html)
+```shell
+python3 -m virtualenv venv
+. ./venv/bin/activate
+pip3 install conan
+```
+
+Before first run say `conan profile detect` to create a default [profile](https://docs.conan.io/2.0/reference/config_files/profiles.html).
+Note, you will need a profile with `build_type=Debug`, while default profile is created with `build_type=Release`.
+
+Then, if needed, install [ninja](https://github.com/ninja-build/ninja) or just say `pip3 install ninja`. 
+After, export `core` and `cli` components:
+```shell
+conan export core
+conan export cli
+```
+
+Note, you need to export them once you change something in the `CMakeLists.txt` or `conanfile.py` in those 
+components/directories (e.g. `cli/CMakeLists.txt` or `cli/conanfile.py`).
+
+Then install dependencies:
+
+```shell
+conan install . --build=missing --output=cmake-build-debug
+```
+
+Note you may need explicitly add the `-o *:shared=True` option to the `conan install` command. Without this `conan`
+compiles dependencies as a **STATIC** libraries and therefore linker cannot link them to the project's binaries.
+
+Now, you a ready to run `cmake`:
+
+```shell
+cmake -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_MAKE_PROGRAM=ninja \
+      -DCMAKE_C_COMPILER=clang \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake \
+      -DCMAKE_TOOLCHAIN_FILE=cmake-build-debug/conan/conan_toolchain.cmake \
+      -DCONAN_COMMAND=venv/bin/conan \
+      -G Ninja \
+      -S . \
+      -B cmake-build-debug \
+      --preset conan-debug
+```
+
+and build the project:
+```shell
+cmake --build ./cmake-build-debug --target SamlibInfo -j 10 --preset=conan-debug
+```
+
+### CLion users
+Once you enable the `Conan` plugin, the `CLion` changes default `CMake` options for your project. In particular, it adds 
+`CONAN_COMMAND`, `DCMAKE_PROJECT_TOP_LEVEL_INCLUDES` and `DCMAKE_TOOLCHAIN_FILE` parameters. 
+
+You may want/need to adjust these parameters according you your paths:
+  - `-DCONAN_COMMAND="~/SamlibInfo-cpp/venv/bin/conan"`
+  - `-DCMAKE_TOOLCHAIN_FILE="~/SamlibInfo-cpp/cmake-build-debug/conan/conan_toolchain.cmake"`
+
+Also, it might be helpful to add the `--preset conan-debug` option there. 
+
+Note, these settings can be found here: 
+  - `Settings` -> `Build, Execution, Deployment` -> `CMake` -> `Debug` -> `CMake options`
