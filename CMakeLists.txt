@@ -20,5 +20,9 @@ project(${APP_NAME})
 
 set(CMAKE_CXX_STANDARD 20)
 
+if(DEFINED CONAN_COMMAND AND NOT EXISTS "${CMAKE_SOURCE_DIR}/conan_provider.cmake")
+    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/develop2/conan_provider.cmake" "${CMAKE_SOURCE_DIR}/conan_provider.cmake")
+endif()
+
 add_subdirectory(core)
 add_subdirectory(cli)
